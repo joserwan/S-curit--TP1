@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 // http://archive.apache.org/dist/commons/codec/binaries/
 import org.apache.commons.codec.digest.*;
@@ -27,6 +29,8 @@ public class Main {
 	
 	static List<String> hashes;
 	static List<String> clearPasswords;
+	static List<Thread> threads;
+	static ExecutorService threadExecutor = Executors.newFixedThreadPool( 6 );
 
 	/**
 	 * @param args
@@ -47,7 +51,12 @@ public class Main {
 	}
 
 	private static void bruteForceAttack(List<String> hashes) {
-		testEachCharNextTo(0);
+		for(int i=1; i <= maxPasswordLength; i++){
+			PasswordBruteForcer bruteForcer = new PasswordBruteForcer(hashes, i, chars);
+			threadExecutor.execute(bruteForcer);
+			//testEachCharNextTo(0);
+		}
+		threadExecutor.shutdown();
 		return;
 	}
 
