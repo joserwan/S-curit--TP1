@@ -30,14 +30,15 @@ public class Main {
 	static List<String> hashes;
 	static List<String> clearPasswords;
 	static List<Thread> threads;
-	static ExecutorService threadExecutor = Executors.newFixedThreadPool( 6 );
+	static int procs = Runtime.getRuntime().availableProcessors();
+	static ExecutorService threadExecutor = Executors.newFixedThreadPool( procs );
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		System.out.print("Starting\n");
+		System.out.print("Starting on " + procs + " threads\n");
 		String md5HashesPath = "/home/ejossic/Dropbox/documents/UQAR/Sécurité/hashed_passwords.txt";
 		String dictionnaryPath = "/home/ejossic/Dropbox/documents/UQAR/Sécurité/mots-8-et-moins.txt";
 
@@ -45,16 +46,25 @@ public class Main {
 		clearPasswords = fileLinesToArray(dictionnaryPath);
 
 		dictionnaryAttack(hashes, clearPasswords);
-		System.out.print("\n\nIl reste " + Integer.toString(hashes.size()) + " MD5 à trouver ...");
+		System.out.print("\n\nIl reste " + Integer.toString(hashes.size()) + " MD5 à trouver ...\n\n");
+		for(int i=0; i<hashes.size(); i++){
+			System.out.print(hashes.get(i) + "\n");
+		}
 		bruteForceAttack(hashes);
 		System.out.print("==============[ Terminé ]===============");
 	}
 
 	private static void bruteForceAttack(List<String> hashes) {
 		for(int i=1; i <= maxPasswordLength; i++){
-			PasswordBruteForcer bruteForcer = new PasswordBruteForcer(hashes, i, chars);
-			threadExecutor.execute(bruteForcer);
-			//testEachCharNextTo(0);
+			for(int j=0; j < chars.length; j++){
+				PasswordBruteForcer bruteForcer = new PasswordBruteForcer(hashes, i, chars, j);
+				if(i < 5){
+					bruteForcer.run();
+				}
+				else{
+					threadExecutor.execute(bruteForcer);
+				}
+			}
 		}
 		threadExecutor.shutdown();
 		return;
